@@ -1,0 +1,14 @@
+{
+    "name" :"game",
+    "main" : "index.html",
+    "window": {
+        "toolbar": true,
+        "show": true,
+        "frame": true,
+        "width": 800,
+        "height": 600
+  },
+  "scripts": {
+    "start": "nw ."
+  }
+}

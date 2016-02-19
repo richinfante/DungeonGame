@@ -1,0 +1,66 @@
+<script id="3d-vertex-shader" type="x-shader/x-vertex">
+attribute vec4 a_position;
+attribute vec2 a_texcoord;
+
+uniform mat4 u_matrix;
+uniform vec3 u_lights[16];
+uniform bool u_lights_enabled[16];
+
+varying vec2 v_texcoord;
+varying vec4 v_position;
+varying vec4 light;
+void main() {
+
+	float lx = 0.0;
+	float ly = 0.0;
+	float lz = 0.0;
+	
+	float x = a_position.x;
+	float y = a_position.y;
+	float z = a_position.z;
+	
+	//float dist = sqrt((lx-x)*(lx-x) + (ly-y)*(ly-y) + (lz-z)*(lz-z));
+	
+	light = vec4(0.05, 0.05, 0.05, 1.0); //Ambient Light Level 
+	
+	for(int i=0; i < 16; i++){
+		if(u_lights_enabled[i] == false){
+			continue;	
+		}
+		lx = u_lights[i].x;
+		ly = u_lights[i].y;
+		lz = u_lights[i].z;
+		
+		float dist = sqrt((lx-x)*(lx-x) + (ly-y)*(ly-y) + (lz-z)*(lz-z));
+	
+		light+= vec4(1.0/(dist*dist),1.0/(dist*dist), 1.0/(dist*dist),1);
+	
+	}
+	
+	// Multiply the position by the matrix.
+	gl_Position = u_matrix * a_position;
+ 
+	// Pass the texcoord to the fragment shader.
+	v_texcoord = a_texcoord;
+
+
+	v_position = a_position;
+}
+
+</script>
+<script id="3d-fragment-shader" type="x-shader/x-fragment">
+precision mediump float;
+
+// Passed in from the vertex shader.
+varying vec2 v_texcoord;
+varying vec4 v_position;
+varying vec4 light;
+// The texture.
+uniform sampler2D u_texture;
+
+ 
+void main() {
+	gl_FragColor = texture2D(u_texture, v_texcoord) * light;
+}
+
+</script>
