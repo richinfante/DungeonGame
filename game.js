@@ -63,6 +63,16 @@ function main() {
 
   gl.enable(gl.CULL_FACE);
   gl.enable(gl.DEPTH_TEST);
+  
+  var fs = require('fs');
+  
+  document.getElementById('3d-vertex-shader').textContent = fs.readFileSync('./shaders/main.vsh', {
+      encoding: 'utf8'
+  });
+  
+  document.getElementById('3d-fragment-shader').textContent = fs.readFileSync('./shaders/main.fsh', {
+      encoding: 'utf8'
+  });
 
   // setup GLSL program
   var program = createProgramFromScripts(gl, ["3d-vertex-shader", "3d-fragment-shader"]);
@@ -170,6 +180,8 @@ function main() {
 
   // Draw the scene.
   function drawScene(time) {
+    //TODO: Determine wether or not to rerender the scene here.
+      
       
     // convert to seconds
     time *= 0.001;
@@ -285,7 +297,6 @@ function main() {
 function setGeometry(gl) {
   var positions = new Float32Array([]);
     
-    ///TODO: Render only onscreen tiles
     ///Dynamic loading in 
     var x = Math.floor(2 * Math.abs(camera.x));
     var y = Math.floor(2 * Math.abs(camera.y));
