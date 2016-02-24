@@ -8,8 +8,10 @@
 		<script src="swat-utils.js"></script>
 		<script src="webgl-utils.js"></script>
 		<script src="webgl-3d-math.js"></script>
+
 		<script src="level.js"></script>
 		<script src="game.js"></script>
+
 		
 		<!--Vertex and fragment shader are loaded automatically here-->
 		<script id="3d-vertex-shader" type="x-shader/x-vertex"></script>
@@ -56,8 +58,9 @@
     	<div class="debug">
         	<div id="triangles"></div>
         	<div id="xyz"></div>
+        	<div id="fps"></div>
         	<div><label id="noiseFactor">Noise: 0.08</label><input type="range" min="0" max="1" step = "0.01" id="noise" value="0.08"></div>
-        	<div><label id="light" for="ambient">Ambient:</label><input type="range" min="0" max=".3" step="0.01" id="ambient" value="0"></div>
+        	<div><label id="light" for="ambient">Ambient:</label><input type="range" min="0" max=".3" step="0.01" id="ambient" value="0.08"></div>
         	<div><label for="noise_enabled">Noise</label><input type="checkbox" id="noise_enabled" checked="true"></div>
         	<div><label id="render" for="renderDistance">Ambient:</label><input type="range" min="1" max="20" step="1" id="renderDistance" value="8"></div>
         	<button onclick="window.location.reload()">reset</button>

@@ -3,10 +3,20 @@ var gl;
 
 var Options = require('./options.js');
 
+var frames_count = 0;
+var fps = 0;
+var last_frame = Date.now();
+
+
 var ambient = 0;
 var noise = 0.08;
 var noiseEnabled = true;
 var level;
+
+var renderOrigin = {
+    x: 0,
+    y: 0
+}
 var camera = new Vec3(0,0,0);
 var num_triangles = 0;
 
@@ -98,6 +108,7 @@ function main() {
   var tex_buffer;
   
   function rerender(){
+      
       // Create a buffer.
       if(buffer !== undefined){
           gl.deleteBuffer(buffer);
@@ -180,8 +191,25 @@ function main() {
 
   // Draw the scene.
   function drawScene(time) {
-    //TODO: Determine wether or not to rerender the scene here.
+    
+      if(Date.now() - last_frame > 1000){
+          last_frame = Date.now();
+          fps = frames_count;
+          frames_count = 1;
+      }else{
+          frames_count++;
+      }
       
+      document.querySelector("#fps").textContent = fps + "fps";
+        
+      
+      
+    //TODO: Determine wether or not to rerender the scene here.
+    var x = Math.floor(2 * Math.abs(camera.x));
+    var y = Math.floor(2 * Math.abs(camera.y));
+    if(x != renderOrigin.x || y != renderOrigin.y){
+        rerender();
+    }
       
     // convert to seconds
     time *= 0.001;
@@ -300,6 +328,8 @@ function setGeometry(gl) {
     ///Dynamic loading in 
     var x = Math.floor(2 * Math.abs(camera.x));
     var y = Math.floor(2 * Math.abs(camera.y));
+    renderOrigin.x = x;
+    renderOrigin.y = y;
     var r = Options.renderDistance;
     
     level.forSection(x - r, y - r, 2 * r, 2 * r, function(x,y,tile){

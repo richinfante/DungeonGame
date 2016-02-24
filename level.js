@@ -260,6 +260,7 @@ function TileWall(wallHeight, texture, topTexture) {
 	y = y || 0;
 	z = z || 0;
 	
+	
 	return new Float32Array(
     [
 	    
