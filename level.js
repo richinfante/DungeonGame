@@ -119,31 +119,34 @@ function Texture(id, textureWidth, spriteResolution){
 	this.bottomLeftCorner = function(){
 		return new Vec2(sx * spriteUnitWidth, (sy+1) * spriteUnitWidth);
 	}
-
-	this.AlternateFloat32Array = function(){
-	return new Float32Array(
-    [
-		this.topRightCorner().x, this.topRightCorner().y,	    
-	    this.bottomLeftCorner().x, this.bottomLeftCorner().y,
-		this.topLeftCorner().x, this.topLeftCorner().y,
-		
-		this.bottomRightCorner().x, this.bottomRightCorner().y,
-		this.bottomLeftCorner().x, this.bottomLeftCorner().y,
-		this.topRightCorner().x, this.topRightCorner().y,
-	]);
-	}
 	
-	this.StandardFloat32Array = function(){
-	return new Float32Array(
-    [
-		this.topLeftCorner().x, this.topLeftCorner().y,
-		this.bottomLeftCorner().x, this.bottomLeftCorner().y,
-		this.topRightCorner().x, this.topRightCorner().y,
-		this.topRightCorner().x, this.topRightCorner().y,
-		this.bottomLeftCorner().x, this.bottomLeftCorner().y,
-		this.bottomRightCorner().x, this.bottomRightCorner().y
-	]);
+	this.getSize = function(){
+    	return 12;
 	}
+
+    this.writeAlternateTexture = function(buffer, index) {
+        writeBuffer(buffer, index, 
+            this.topRightCorner().x, this.topRightCorner().y,	    
+    	    this.bottomLeftCorner().x, this.bottomLeftCorner().y,
+    		this.topLeftCorner().x, this.topLeftCorner().y,
+    		
+    		this.bottomRightCorner().x, this.bottomRightCorner().y,
+    		this.bottomLeftCorner().x, this.bottomLeftCorner().y,
+    		this.topRightCorner().x, this.topRightCorner().y
+		);
+    }
+    
+    this.writeTexture = function(buffer, index) {
+        writeBuffer(buffer, index, 
+            this.topLeftCorner().x, this.topLeftCorner().y,
+    		this.bottomLeftCorner().x, this.bottomLeftCorner().y,
+    		this.topRightCorner().x, this.topRightCorner().y,
+    		
+    		this.topRightCorner().x, this.topRightCorner().y,
+    		this.bottomLeftCorner().x, this.bottomLeftCorner().y,
+    		this.bottomRightCorner().x, this.bottomRightCorner().y
+		);
+    }
 }
 
 /*
@@ -216,24 +219,32 @@ function Tile(texture) {
 	this.neighbors = {};
 	this.texture = texture || Textures.mossCobblestone;
 	
-	this.getTextureModel = function(){
-		return this.texture.StandardFloat32Array();
+	this.renderTextureModel = function(buffer, i){
+        this.texture.writeTexture(buffer, i);
 	}
 	
-	this.getModel = function(x,y,z){
-	x = x || 0;
-	y = y || 0;
-	z = z || 0;
+	this.textureModelSize = function(){
+        this.texture.getSize();
+    }
 	
-	return new Float32Array(
-    [
-    -TILE_SIZE_CONSTANT + x, -TILE_SIZE_CONSTANT + y,   z,
-     TILE_SIZE_CONSTANT + x, -TILE_SIZE_CONSTANT + y,   z,
-    -TILE_SIZE_CONSTANT + x,  TILE_SIZE_CONSTANT + y,   z,
-    -TILE_SIZE_CONSTANT + x,  TILE_SIZE_CONSTANT + y,   z,
-     TILE_SIZE_CONSTANT + x, -TILE_SIZE_CONSTANT + y,   z,
-     TILE_SIZE_CONSTANT + x,  TILE_SIZE_CONSTANT + y,   z,
-    ]);
+	this.renderModel = function(buffer, i, x,y,z){
+    	x = x || 0;
+        y = y || 0;
+	    z = z || 0;
+	    
+        writeBuffer(buffer, i,
+            -TILE_SIZE_CONSTANT + x, -TILE_SIZE_CONSTANT + y,   z,
+             TILE_SIZE_CONSTANT + x, -TILE_SIZE_CONSTANT + y,   z,
+            -TILE_SIZE_CONSTANT + x,  TILE_SIZE_CONSTANT + y,   z,
+            -TILE_SIZE_CONSTANT + x,  TILE_SIZE_CONSTANT + y,   z,
+             TILE_SIZE_CONSTANT + x, -TILE_SIZE_CONSTANT + y,   z,
+             TILE_SIZE_CONSTANT + x,  TILE_SIZE_CONSTANT + y,   z
+        );
+        
+    };
+	
+	this.getSize = function(){
+    	return 18;
 	}
 }
 
@@ -244,78 +255,74 @@ function TileWall(wallHeight, texture, topTexture) {
 	this.texture = texture || Textures.cobblestone;
 	this.topTexture = topTexture || texture;
 	this.height = wallHeight || 2;
-	
-	this.getTextureModel = function(){
-		var model = new Float32Array([]);
-		model = joinFloat32Arrays(model, this.topTexture.StandardFloat32Array());
-		model = joinFloat32Arrays(model, this.texture.AlternateFloat32Array());
-		model = joinFloat32Arrays(model, this.texture.StandardFloat32Array());
-		model = joinFloat32Arrays(model, this.texture.AlternateFloat32Array());
-		model = joinFloat32Arrays(model, this.texture.StandardFloat32Array());
-		return model;
-	};
-	
-	this.getModel = function(x,y,z){
-	x = x || 0;
-	y = y || 0;
-	z = z || 0;
-	
-	
-	return new Float32Array(
-    [
-	    
-	 //Top Face
-    -TILE_SIZE_CONSTANT + x, -TILE_SIZE_CONSTANT + y,   z+ this.height,
-     TILE_SIZE_CONSTANT + x, -TILE_SIZE_CONSTANT + y,   z+ this.height,
-    -TILE_SIZE_CONSTANT + x,  TILE_SIZE_CONSTANT + y,   z+ this.height,
-    
-    -TILE_SIZE_CONSTANT + x,  TILE_SIZE_CONSTANT + y,   z+ this.height,
-     TILE_SIZE_CONSTANT + x, -TILE_SIZE_CONSTANT + y,   z+ this.height,
-     TILE_SIZE_CONSTANT + x,  TILE_SIZE_CONSTANT + y,   z+ this.height,
-     
-     
-     //South Face
-    -TILE_SIZE_CONSTANT + x, -TILE_SIZE_CONSTANT + y,   z,
-     TILE_SIZE_CONSTANT + x, -TILE_SIZE_CONSTANT + y,   z+ this.height,
-    -TILE_SIZE_CONSTANT + x, -TILE_SIZE_CONSTANT + y,   z+ this.height,
-    
-     TILE_SIZE_CONSTANT + x,  -TILE_SIZE_CONSTANT + y,   z,
-     TILE_SIZE_CONSTANT + x, -TILE_SIZE_CONSTANT + y,   z+ this.height,     
-    -TILE_SIZE_CONSTANT + x,  -TILE_SIZE_CONSTANT + y,   z,     
-    
-    
-    //North Face 
-    -TILE_SIZE_CONSTANT + x, TILE_SIZE_CONSTANT + y,   z+ this.height,
-     TILE_SIZE_CONSTANT + x, TILE_SIZE_CONSTANT + y,   z+ this.height,
-    -TILE_SIZE_CONSTANT + x, TILE_SIZE_CONSTANT + y,   z,
-    
-	-TILE_SIZE_CONSTANT + x,  TILE_SIZE_CONSTANT + y,   z,    
-	TILE_SIZE_CONSTANT + x, TILE_SIZE_CONSTANT + y,   z+ this.height,
-	TILE_SIZE_CONSTANT + x, TILE_SIZE_CONSTANT + y,   z,
-	
-	
-	//West Face
-    -TILE_SIZE_CONSTANT + x, TILE_SIZE_CONSTANT + y,   z,
-    -TILE_SIZE_CONSTANT + x, -TILE_SIZE_CONSTANT + y,   z+ this.height,
-	-TILE_SIZE_CONSTANT + x, TILE_SIZE_CONSTANT + y,   z+ this.height,   
-    
-	-TILE_SIZE_CONSTANT + x, -TILE_SIZE_CONSTANT + y,   z,
-	-TILE_SIZE_CONSTANT + x, -TILE_SIZE_CONSTANT + y,   z+ this.height,
-	-TILE_SIZE_CONSTANT + x, TILE_SIZE_CONSTANT + y,   z,    	
-	
-	//East Face
-	TILE_SIZE_CONSTANT + x, TILE_SIZE_CONSTANT + y,   z+ this.height,   
-    TILE_SIZE_CONSTANT + x, -TILE_SIZE_CONSTANT + y,   z+ this.height,
-    TILE_SIZE_CONSTANT + x, TILE_SIZE_CONSTANT + y,   z,    
 
-	TILE_SIZE_CONSTANT + x, TILE_SIZE_CONSTANT + y,   z,    	
-	TILE_SIZE_CONSTANT + x, -TILE_SIZE_CONSTANT + y,   z+ this.height,	
-	TILE_SIZE_CONSTANT + x, -TILE_SIZE_CONSTANT + y,   z,
-    ]);
+	this.renderTextureModel = function(buffer, i){
+        this.topTexture.writeTexture(buffer, i);
+        this.texture.writeAlternateTexture(buffer, i + 12);
+        this.texture.writeTexture(buffer, i + 12 * 2);
+        this.texture.writeAlternateTexture(buffer, i + 12 * 3);
+        this.texture.writeTexture(buffer, i + 12 * 4);
 	}
-	
-	
-	
+    
+	this.getSize = function(){
+    	return 90;
+	}
+
+    this.renderModel = function(buffer, i, x,y,z){
+        x = x || 0;
+        y = y || 0;
+	    z = z || 0;
+	    
+        writeBuffer(buffer, i,
+             //Top Face
+            -TILE_SIZE_CONSTANT + x, -TILE_SIZE_CONSTANT + y,   z+ this.height,
+             TILE_SIZE_CONSTANT + x, -TILE_SIZE_CONSTANT + y,   z+ this.height,
+            -TILE_SIZE_CONSTANT + x,  TILE_SIZE_CONSTANT + y,   z+ this.height,
+            
+            -TILE_SIZE_CONSTANT + x,  TILE_SIZE_CONSTANT + y,   z+ this.height,
+             TILE_SIZE_CONSTANT + x, -TILE_SIZE_CONSTANT + y,   z+ this.height,
+             TILE_SIZE_CONSTANT + x,  TILE_SIZE_CONSTANT + y,   z+ this.height,
+             
+             
+             //South Face
+            -TILE_SIZE_CONSTANT + x, -TILE_SIZE_CONSTANT + y,   z,
+             TILE_SIZE_CONSTANT + x, -TILE_SIZE_CONSTANT + y,   z+ this.height,
+            -TILE_SIZE_CONSTANT + x, -TILE_SIZE_CONSTANT + y,   z+ this.height,
+            
+             TILE_SIZE_CONSTANT + x,  -TILE_SIZE_CONSTANT + y,   z,
+             TILE_SIZE_CONSTANT + x, -TILE_SIZE_CONSTANT + y,   z+ this.height,     
+            -TILE_SIZE_CONSTANT + x,  -TILE_SIZE_CONSTANT + y,   z,     
+            
+            
+            //North Face 
+            -TILE_SIZE_CONSTANT + x, TILE_SIZE_CONSTANT + y,   z+ this.height,
+             TILE_SIZE_CONSTANT + x, TILE_SIZE_CONSTANT + y,   z+ this.height,
+            -TILE_SIZE_CONSTANT + x, TILE_SIZE_CONSTANT + y,   z,
+            
+        	-TILE_SIZE_CONSTANT + x,  TILE_SIZE_CONSTANT + y,   z,    
+        	TILE_SIZE_CONSTANT + x, TILE_SIZE_CONSTANT + y,   z+ this.height,
+        	TILE_SIZE_CONSTANT + x, TILE_SIZE_CONSTANT + y,   z,
+        	
+        	
+        	//West Face
+            -TILE_SIZE_CONSTANT + x, TILE_SIZE_CONSTANT + y,   z,
+            -TILE_SIZE_CONSTANT + x, -TILE_SIZE_CONSTANT + y,   z+ this.height,
+        	-TILE_SIZE_CONSTANT + x, TILE_SIZE_CONSTANT + y,   z+ this.height,   
+            
+        	-TILE_SIZE_CONSTANT + x, -TILE_SIZE_CONSTANT + y,   z,
+        	-TILE_SIZE_CONSTANT + x, -TILE_SIZE_CONSTANT + y,   z+ this.height,
+        	-TILE_SIZE_CONSTANT + x, TILE_SIZE_CONSTANT + y,   z,    	
+        	
+        	//East Face
+        	TILE_SIZE_CONSTANT + x, TILE_SIZE_CONSTANT + y,   z+ this.height,   
+            TILE_SIZE_CONSTANT + x, -TILE_SIZE_CONSTANT + y,   z+ this.height,
+            TILE_SIZE_CONSTANT + x, TILE_SIZE_CONSTANT + y,   z,    
+        
+        	TILE_SIZE_CONSTANT + x, TILE_SIZE_CONSTANT + y,   z,    	
+        	TILE_SIZE_CONSTANT + x, -TILE_SIZE_CONSTANT + y,   z+ this.height,	
+        	TILE_SIZE_CONSTANT + x, -TILE_SIZE_CONSTANT + y,   z
+        );   
+    }
 }
 
 
@@ -328,89 +335,86 @@ function TileArchway(wallHeight, texture, topTexture, floorTexture) {
 	
 	this.height = wallHeight || 2;
 	
-	this.getTextureModel = function(){
-		var model = new Float32Array([]);
-		model = joinFloat32Arrays(model, this.topTexture.StandardFloat32Array());
-		model = joinFloat32Arrays(model, this.floorTexture.StandardFloat32Array());
-		model = joinFloat32Arrays(model, this.texture.AlternateFloat32Array());
-		model = joinFloat32Arrays(model, this.texture.StandardFloat32Array());
-		model = joinFloat32Arrays(model, this.texture.AlternateFloat32Array());
-		model = joinFloat32Arrays(model, this.texture.StandardFloat32Array());
-		return model;
-	};
+	this.renderTextureModel = function(buffer, i){
+        this.topTexture.writeTexture(buffer, i);
+        this.floorTexture.writeTexture(buffer, i + 12);
+        this.texture.writeAlternateTexture(buffer, i + 12 * 2);
+        this.texture.writeTexture(buffer, i + 12 * 3);
+        this.texture.writeAlternateTexture(buffer, i + 12 * 4);
+        this.texture.writeTexture(buffer, i + 12 * 5);
+	}
 	
 	this.getHeight = function(x,y) {
     	
 	}
 	
-	this.getModel = function(x,y,z){
-	x = x || 0;
-	y = y || 0;
-	z = z || 0;
-	
-	return new Float32Array(
-    [
-	    
-	 //Top Face
-    -TILE_SIZE_CONSTANT + x, -TILE_SIZE_CONSTANT + y,   z+ this.height,
-     TILE_SIZE_CONSTANT + x, -TILE_SIZE_CONSTANT + y,   z+ this.height,
-    -TILE_SIZE_CONSTANT + x,  TILE_SIZE_CONSTANT + y,   z+ this.height,
-    
-    -TILE_SIZE_CONSTANT + x,  TILE_SIZE_CONSTANT + y,   z+ this.height,
-     TILE_SIZE_CONSTANT + x, -TILE_SIZE_CONSTANT + y,   z+ this.height,
-     TILE_SIZE_CONSTANT + x,  TILE_SIZE_CONSTANT + y,   z+ this.height,
-     
-      //Floor
-    -TILE_SIZE_CONSTANT + x, -TILE_SIZE_CONSTANT + y,   z,
-     TILE_SIZE_CONSTANT + x, -TILE_SIZE_CONSTANT + y,   z,
-    -TILE_SIZE_CONSTANT + x,  TILE_SIZE_CONSTANT + y,   z,
-    
-    -TILE_SIZE_CONSTANT + x,  TILE_SIZE_CONSTANT + y,   z,
-     TILE_SIZE_CONSTANT + x, -TILE_SIZE_CONSTANT + y,   z,
-     TILE_SIZE_CONSTANT + x,  TILE_SIZE_CONSTANT + y,   z,
-     
-     
-     //South Face
-    -TILE_SIZE_CONSTANT + x, -TILE_SIZE_CONSTANT + y,   z+this.height - this.height / 16,
-     TILE_SIZE_CONSTANT + x, -TILE_SIZE_CONSTANT + y,   z+ this.height,
-    -TILE_SIZE_CONSTANT + x, -TILE_SIZE_CONSTANT + y,   z+ this.height,
-    
-     TILE_SIZE_CONSTANT + x,  -TILE_SIZE_CONSTANT + y,   z+this.height - this.height / 16,
-     TILE_SIZE_CONSTANT + x, -TILE_SIZE_CONSTANT + y,   z+ this.height,     
-    -TILE_SIZE_CONSTANT + x,  -TILE_SIZE_CONSTANT + y,   z+this.height - this.height / 16,  
-    
-    
-    //North Face 
-    -TILE_SIZE_CONSTANT + x, TILE_SIZE_CONSTANT + y,   z+ this.height,
-     TILE_SIZE_CONSTANT + x, TILE_SIZE_CONSTANT + y,   z+ this.height,
-    -TILE_SIZE_CONSTANT + x, TILE_SIZE_CONSTANT + y,   z+this.height - this.height / 16,
-    
-	-TILE_SIZE_CONSTANT + x,  TILE_SIZE_CONSTANT + y,   z+this.height - this.height / 16,  
-	TILE_SIZE_CONSTANT + x, TILE_SIZE_CONSTANT + y,   z+ this.height,
-	TILE_SIZE_CONSTANT + x, TILE_SIZE_CONSTANT + y,   z+this.height - this.height / 16,
-	
-	
-	//West Face
-    -TILE_SIZE_CONSTANT + x, TILE_SIZE_CONSTANT + y,   z+this.height - this.height / 16,
-    -TILE_SIZE_CONSTANT + x, -TILE_SIZE_CONSTANT + y,   z+ this.height,
-	-TILE_SIZE_CONSTANT + x, TILE_SIZE_CONSTANT + y,   z+ this.height,   
-    
-	-TILE_SIZE_CONSTANT + x, -TILE_SIZE_CONSTANT + y,   z+this.height - this.height / 16,
-	-TILE_SIZE_CONSTANT + x, -TILE_SIZE_CONSTANT + y,   z+ this.height,
-	-TILE_SIZE_CONSTANT + x, TILE_SIZE_CONSTANT + y,   z+this.height - this.height / 16,    	
-	
-	//East Face
-	TILE_SIZE_CONSTANT + x, TILE_SIZE_CONSTANT + y,   z+ this.height,   
-    TILE_SIZE_CONSTANT + x, -TILE_SIZE_CONSTANT + y,   z+ this.height,
-    TILE_SIZE_CONSTANT + x, TILE_SIZE_CONSTANT + y,   z+this.height - this.height / 16,
-
-	TILE_SIZE_CONSTANT + x, TILE_SIZE_CONSTANT + y,   z+this.height - this.height / 16,
-	TILE_SIZE_CONSTANT + x, -TILE_SIZE_CONSTANT + y,   z+ this.height,	
-	TILE_SIZE_CONSTANT + x, -TILE_SIZE_CONSTANT + y,   z+this.height - this.height / 16,
-    ]);
+	this.getSize = function(){
+    	return 108;
 	}
 	
+	this.renderModel = function(buffer, i, x,y,z){
+    	x = x || 0;
+        y = y || 0;
+        z = z || 0;
 	
+        writeBuffer(buffer, i, 
+            -TILE_SIZE_CONSTANT + x, -TILE_SIZE_CONSTANT + y,   z+ this.height,
+             TILE_SIZE_CONSTANT + x, -TILE_SIZE_CONSTANT + y,   z+ this.height,
+            -TILE_SIZE_CONSTANT + x,  TILE_SIZE_CONSTANT + y,   z+ this.height,
+            
+            -TILE_SIZE_CONSTANT + x,  TILE_SIZE_CONSTANT + y,   z+ this.height,
+             TILE_SIZE_CONSTANT + x, -TILE_SIZE_CONSTANT + y,   z+ this.height,
+             TILE_SIZE_CONSTANT + x,  TILE_SIZE_CONSTANT + y,   z+ this.height,
+             
+              //Floor
+            -TILE_SIZE_CONSTANT + x, -TILE_SIZE_CONSTANT + y,   z,
+             TILE_SIZE_CONSTANT + x, -TILE_SIZE_CONSTANT + y,   z,
+            -TILE_SIZE_CONSTANT + x,  TILE_SIZE_CONSTANT + y,   z,
+            
+            -TILE_SIZE_CONSTANT + x,  TILE_SIZE_CONSTANT + y,   z,
+             TILE_SIZE_CONSTANT + x, -TILE_SIZE_CONSTANT + y,   z,
+             TILE_SIZE_CONSTANT + x,  TILE_SIZE_CONSTANT + y,   z,
+             
+             
+             //South Face
+            -TILE_SIZE_CONSTANT + x, -TILE_SIZE_CONSTANT + y,   z+this.height - this.height / 16,
+             TILE_SIZE_CONSTANT + x, -TILE_SIZE_CONSTANT + y,   z+ this.height,
+            -TILE_SIZE_CONSTANT + x, -TILE_SIZE_CONSTANT + y,   z+ this.height,
+            
+             TILE_SIZE_CONSTANT + x,  -TILE_SIZE_CONSTANT + y,   z+this.height - this.height / 16,
+             TILE_SIZE_CONSTANT + x, -TILE_SIZE_CONSTANT + y,   z+ this.height,     
+            -TILE_SIZE_CONSTANT + x,  -TILE_SIZE_CONSTANT + y,   z+this.height - this.height / 16,  
+            
+            
+            //North Face 
+            -TILE_SIZE_CONSTANT + x, TILE_SIZE_CONSTANT + y,   z+ this.height,
+             TILE_SIZE_CONSTANT + x, TILE_SIZE_CONSTANT + y,   z+ this.height,
+            -TILE_SIZE_CONSTANT + x, TILE_SIZE_CONSTANT + y,   z+this.height - this.height / 16,
+            
+        	-TILE_SIZE_CONSTANT + x,  TILE_SIZE_CONSTANT + y,   z+this.height - this.height / 16,  
+        	TILE_SIZE_CONSTANT + x, TILE_SIZE_CONSTANT + y,   z+ this.height,
+        	TILE_SIZE_CONSTANT + x, TILE_SIZE_CONSTANT + y,   z+this.height - this.height / 16,
+        	
+        	
+        	//West Face
+            -TILE_SIZE_CONSTANT + x, TILE_SIZE_CONSTANT + y,   z+this.height - this.height / 16,
+            -TILE_SIZE_CONSTANT + x, -TILE_SIZE_CONSTANT + y,   z+ this.height,
+        	-TILE_SIZE_CONSTANT + x, TILE_SIZE_CONSTANT + y,   z+ this.height,   
+            
+        	-TILE_SIZE_CONSTANT + x, -TILE_SIZE_CONSTANT + y,   z+this.height - this.height / 16,
+        	-TILE_SIZE_CONSTANT + x, -TILE_SIZE_CONSTANT + y,   z+ this.height,
+        	-TILE_SIZE_CONSTANT + x, TILE_SIZE_CONSTANT + y,   z+this.height - this.height / 16,    	
+        	
+        	//East Face
+        	TILE_SIZE_CONSTANT + x, TILE_SIZE_CONSTANT + y,   z+ this.height,   
+            TILE_SIZE_CONSTANT + x, -TILE_SIZE_CONSTANT + y,   z+ this.height,
+            TILE_SIZE_CONSTANT + x, TILE_SIZE_CONSTANT + y,   z+this.height - this.height / 16,
+        
+        	TILE_SIZE_CONSTANT + x, TILE_SIZE_CONSTANT + y,   z+this.height - this.height / 16,
+        	TILE_SIZE_CONSTANT + x, -TILE_SIZE_CONSTANT + y,   z+ this.height,	
+        	TILE_SIZE_CONSTANT + x, -TILE_SIZE_CONSTANT + y,   z+this.height - this.height / 16
+    	);
+	};
 	
 }
 

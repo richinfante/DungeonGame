@@ -207,7 +207,7 @@ function main() {
     //TODO: Determine wether or not to rerender the scene here.
     var x = Math.floor(2 * Math.abs(camera.x));
     var y = Math.floor(2 * Math.abs(camera.y));
-    if(x != renderOrigin.x || y != renderOrigin.y){
+    if(x != renderOrigin.x || y != renderOrigin.y){ //or if the scene changed,
         rerender();
     }
       
@@ -284,7 +284,7 @@ function main() {
 	]);
 
     gl.uniform3fv(lightColors, [
-		1,1,1,
+		1,0,1,
 		0,1,0,
 		1,0,0,
 		0,0,1
@@ -323,18 +323,33 @@ function main() {
 
 // Fill the buffer with the values that define a cube.
 function setGeometry(gl) {
-  var positions = new Float32Array([]);
     
-    ///Dynamic loading in 
+    
     var x = Math.floor(2 * Math.abs(camera.x));
     var y = Math.floor(2 * Math.abs(camera.y));
     renderOrigin.x = x;
     renderOrigin.y = y;
     var r = Options.renderDistance;
     
+    //Find out exact size we're rendering this frame.
+    var size = 0;
+    
     level.forSection(x - r, y - r, 2 * r, 2 * r, function(x,y,tile){
-		positions = joinFloat32Arrays(positions, tile.getModel(x,y));
+		size += tile.getSize();
 	});
+	
+	//Allocate an array with that size
+    var positions = new Float32Array(size);
+    
+    //Write index
+    var index = 0;
+    
+    //Iterate all tiles, writing their models into the buffer.
+    level.forSection(x - r, y - r, 2 * r, 2 * r, function(x,y,tile){
+	    tile.renderModel(positions, index, x,y);
+	    index += tile.getSize();	
+	});
+	
 	
     num_triangles = positions.length / 3;
   gl.bufferData(gl.ARRAY_BUFFER, positions, gl.STATIC_DRAW);
@@ -343,19 +358,28 @@ function setGeometry(gl) {
 
 // Fill the buffer with texture coordinates the cube.
 function setTexcoords(gl) {
-	var array  = new Float32Array([]);
-	var x = Math.floor(2 * Math.abs(camera.x));
+    
+    //We've got two texcoords for each vertex
+    var size = num_triangles * 2;
+    
+    //Allocate an array
+    var positions = new Float32Array(size);
+    
+    //Keep track of the index
+    var index = 0;
+    
+    //Calculate origin
+    var x = Math.floor(2 * Math.abs(camera.x));
     var y = Math.floor(2 * Math.abs(camera.y));
+    renderOrigin.x = x;
+    renderOrigin.y = y;
     var r = Options.renderDistance;
     
+    //Iterate over tiles to be rendered.
     level.forSection(x - r, y - r, 2 * r, 2 * r, function(x,y,tile){
-		array = joinFloat32Arrays(array, tile.getTextureModel());
-		//positions = joinFloat32Arrays(positions, tile.getModel(x,y));
+	    tile.renderTextureModel(positions, index);
+	    index += tile.getSize() / 3 * 2; //increment index.
 	});
-	/*
-	level.forEach(function(x,y,tile){
-		array = joinFloat32Arrays(array, tile.getTextureModel());
-	});
-	*/
-  gl.bufferData(gl.ARRAY_BUFFER, array, gl.STATIC_DRAW);
+
+  gl.bufferData(gl.ARRAY_BUFFER, positions, gl.STATIC_DRAW);
 }
